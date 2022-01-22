@@ -5,7 +5,7 @@ import Logging
 import SwiftUI
 
 @MainActor
-final class LoginViewController: UIViewController {
+final class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet private var idField: UITextField!
     @IBOutlet private var passwordField: UITextField!
     @IBOutlet private var loginButton: UIButton!
@@ -15,6 +15,9 @@ final class LoginViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+
+        idField.delegate = self
+        passwordField.delegate = self
 
         // VC を表示する前に View の状態のアップデートし、状態の不整合を防ぐ。
         // loginButton は ID およびパスワードが空でない場合だけ有効。
@@ -151,5 +154,10 @@ final class LoginViewController: UIViewController {
             idField.text?.isEmpty ?? true
             || passwordField.text?.isEmpty ?? true
         )
+    }
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
 }
