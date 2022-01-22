@@ -12,15 +12,15 @@ public enum UserService {
             throw NetworkError(cause: error)
         }
 
-        guard Bool.random() else {
-            if Bool.random() {
-                throw NetworkError(cause: GeneralError(message: "Timeout."))
-            } else if Bool.random() {
-                throw ServerError.internal(cause: GeneralError(message: "Rate limit exceeded."))
-            } else {
-                throw GeneralError(message: "System error.")
-            }
-        }
+//        guard Bool.random() else {
+//            if Bool.random() {
+//                throw NetworkError(cause: GeneralError(message: "Timeout."))
+//            } else if Bool.random() {
+//                throw ServerError.internal(cause: GeneralError(message: "Rate limit exceeded."))
+//            } else {
+//                throw GeneralError(message: "System error.")
+//            }
+//        }
 
         let introduction: String
         if Bool.random() {

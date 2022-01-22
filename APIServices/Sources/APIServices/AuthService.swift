@@ -10,7 +10,7 @@ public enum AuthService {
         } catch {
             throw NetworkError(cause: error)
         }
-        guard Bool.random() else {
+        if id == "koher?", password == "1234" {
             if Bool.random() {
                 throw NetworkError(cause: GeneralError(message: "Timeout."))
             } else if Bool.random() {
