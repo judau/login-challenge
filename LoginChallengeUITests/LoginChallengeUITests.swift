@@ -29,47 +29,59 @@ class LoginChallengeUITests: XCTestCase {
             XCTAssertTrue(!loginButton.isEnabled)
         }
 
-        let tbId = app.textFields["tbId"]
-        tbId.tap()
-        tbId.typeText("koher")
+        XCTContext.runActivity(named: "IDを入力できること") { _ in
+            let text = "koher"
+            let tbId = app.textFields["tbId"]
+            tbId.tap()
+            tbId.typeText(text)
+            app.keyboards.buttons["Return"].tap()
+            XCTAssertEqual(tbId.firstMatch.value as! String, text)
+        }
 
-        let tbPassword = app.secureTextFields["tbPw"]
-        tbPassword.tap()
-        tbPassword.typeText("1234")
+        XCTContext.runActivity(named: "パスワードをマスクされた状態で入力できること") { _ in
+            let text = "1234"
+            let tbPassword = app.secureTextFields["tbPw"]
+            tbPassword.tap()
+            tbPassword.typeText(text)
+            app.keyboards.buttons["Return"].tap()
+            XCTAssertEqual(tbPassword.firstMatch.value as! String, "••••")
+        }
 
-        app.keyboards.buttons["Return"].tap()
-
-        XCTAssertTrue(loginButton.isEnabled)
-        loginButton.tap()
-
+        XCTContext.runActivity(named: "ログインボタンがタップできること") { _ in
+            waitToAppear(for: loginButton)
+            XCTAssertTrue(loginButton.isEnabled)
+        }
 
         let logoutButton = app.buttons["Logout"]
         XCTContext.runActivity(named: "ログインが成功すること") { _ in
+            loginButton.tap()
             wait(for: [expectation(
                     for: NSPredicate(format: "exists == true"),
                     evaluatedWith: logoutButton,
                     handler: .none
             )], timeout: waitInterval)
         }
+
         XCTContext.runActivity(named: "ログインボタンがタップできること") { _ in
             XCTAssert(logoutButton.isEnabled)
         }
 
         // SwiftUI対応を考えるとelementを探してlabel検査するよりも、直接文字列検索が望ましい気がした
-        XCTContext.runActivity(named: "名前が表示されていること") { (activity) in
+        XCTContext.runActivity(named: "名前が表示されていること") { _ in
             let text = "Yuta Koshizawa"
             let query = app.staticTexts[text]
             waitToAppear(for: query)
             XCTAssertEqual(query.label, text)
         }
-        XCTContext.runActivity(named: "IDが表示されていること") { (activity) in
+
+        XCTContext.runActivity(named: "IDが表示されていること") { _ in
             let text = "@koher"
             let query = app.staticTexts[text]
             waitToAppear(for: query)
             XCTAssertEqual(query.label, text)
         }
 
-        XCTContext.runActivity(named: "紹介文が表示されていること") { (activity) in
+        XCTContext.runActivity(named: "紹介文が表示されていること") { _ in
             let keyword = "ソフトウェア"
             let query = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", keyword)).firstMatch
             waitToAppear(for: query)
