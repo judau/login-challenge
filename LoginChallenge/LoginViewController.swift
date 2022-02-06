@@ -43,16 +43,10 @@ final class LoginViewController: UIViewController, UITextFieldDelegate {
             guard let id = idField.text, let password = passwordField.text else { return }
             
             // 処理中は入力とボタン押下を受け付けない。
-            idField.isEnabled = false
-            passwordField.isEnabled = false
-            loginButton.isEnabled = false
+            switchEachControl(enable: false)
             
-            // Activity Indicator を表示。
-            let activityIndicatorViewController: ActivityIndicatorViewController = .init()
-            activityIndicatorViewController.modalPresentationStyle = .overFullScreen
-            activityIndicatorViewController.modalTransitionStyle = .crossDissolve
-            await present(activityIndicatorViewController, animated: true)
-            
+            await self.displayActivityIndicator()
+
             do {
                 // API を叩いて処理を実行。
                 try await AuthService.logInWith(id: id, password: password)
@@ -74,75 +68,29 @@ final class LoginViewController: UIViewController, UITextFieldDelegate {
                 // この VC から遷移するのでボタンの押下受け付けは再開しない。
                 // 遷移アニメーション中に処理が実行されることを防ぐ。
             } catch let error as LoginError {
-                // ユーザーに詳細なエラー情報は提示しないが、
-                // デバッグ用にエラー情報を表示。
-                logger.info("\(error)")
-                
-                // Activity Indicator を非表示に。
-                await dismiss(animated: true)
-                
-                // 入力とログインボタン押下を再度受け付けるように。
-                idField.isEnabled = true
-                passwordField.isEnabled = true
-                loginButton.isEnabled = true
-                
-                // アラートでエラー情報を表示。
-                // ユーザーには不必要に詳細なエラー情報は提示しない。
-                let alertController: UIAlertController = .init(
-                    title: "ログインエラー",
-                    message: "IDまたはパスワードが正しくありません。",
-                    preferredStyle: .alert
-                )
-                alertController.addAction(.init(title: "閉じる", style: .default, handler: nil))
-                await present(alertController, animated: true)
+                await processError(error, alert: UIAlertController(
+                        title: "ログインエラー",
+                        message: "IDまたはパスワードが正しくありません。",
+                        preferredStyle: .alert
+                ))
             } catch let error as NetworkError {
-                logger.info("\(error)")
-                
-                await dismiss(animated: true)
-                
-                idField.isEnabled = true
-                passwordField.isEnabled = true
-                loginButton.isEnabled = true
-                
-                let alertController: UIAlertController = .init(
-                    title: "ネットワークエラー",
-                    message: "通信に失敗しました。ネットワークの状態を確認して下さい。",
-                    preferredStyle: .alert
-                )
-                alertController.addAction(.init(title: "閉じる", style: .default, handler: nil))
-                await present(alertController, animated: true)
+                await processError(error, alert: UIAlertController(
+                        title: "ネットワークエラー",
+                        message: "通信に失敗しました。ネットワークの状態を確認して下さい。",
+                        preferredStyle: .alert
+                ))
             } catch let error as ServerError {
-                logger.info("\(error)")
-                
-                await dismiss(animated: true)
-                
-                idField.isEnabled = true
-                passwordField.isEnabled = true
-                loginButton.isEnabled = true
-                
-                let alertController: UIAlertController = .init(
-                    title: "サーバーエラー",
-                    message: "しばらくしてからもう一度お試し下さい。",
-                    preferredStyle: .alert
-                )
-                alertController.addAction(.init(title: "閉じる", style: .default, handler: nil))
-                await present(alertController, animated: true)
+                await processError(error, alert: UIAlertController(
+                        title: "サーバーエラー",
+                        message: "しばらくしてからもう一度お試し下さい。",
+                        preferredStyle: .alert
+                ))
             } catch {
-                logger.info("\(error)")
-                
-                await dismiss(animated: true)
-                
-                idField.isEnabled = true
-                passwordField.isEnabled = true
-                loginButton.isEnabled = true
-                
-                let alertController: UIAlertController = .init(
-                    title: "システムエラー",
-                    message: "エラーが発生しました。",
-                    preferredStyle: .alert
-                )
-                alertController.addAction(.init(title: "閉じる", style: .default, handler: nil))
-                await present(alertController, animated: true)
+                await processError(error, alert: UIAlertController(
+                        title: "システムエラー",
+                        message: "エラーが発生しました。",
+                        preferredStyle: .alert
+                ))
             }
         }
     }
@@ -156,6 +104,48 @@ final class LoginViewController: UIViewController, UITextFieldDelegate {
         )
     }
 
+    /// Activity Indicator を表示。
+    private func displayActivityIndicator() async {
+        let activityIndicatorViewController: ActivityIndicatorViewController = .init()
+        activityIndicatorViewController.modalPresentationStyle = .overFullScreen
+        activityIndicatorViewController.modalTransitionStyle = .crossDissolve
+        await present(activityIndicatorViewController, animated: true)
+    }
+
+    ///
+    /// エラーを処理する
+    ///
+    /// - Parameter error: 発生したエラー
+    /// - Parameter alertController: 表示するアラート
+    private func processError(_ error: Error, alert alertController: UIAlertController) async {
+        // ユーザーに詳細なエラー情報は提示しないが、
+        // デバッグ用にエラー情報を表示。
+        logger.info("\(error)")
+
+        // Activity Indicator を非表示に。
+        await dismiss(animated: true)
+
+        // 入力とログインボタン押下を再度受け付けるように。
+        switchEachControl(enable: true)
+
+        // アラートでエラー情報を表示。
+        // ユーザーには不必要に詳細なエラー情報は提示しない。
+        alertController.addAction(.init(title: "閉じる", style: .default, handler: nil))
+        await present(alertController, animated: true)
+    }
+
+    private func switchEachControl(enable: Bool) {
+        idField.isEnabled = enable
+        passwordField.isEnabled = enable
+        loginButton.isEnabled = enable
+    }
+
+
+    /// UIテストでキーボードがうまく消えない時用のおまじない
+    /// TODO: 結局原因はテスト側にあったことが分かったのでいらない疑惑がある。
+    ///
+    /// - Parameter textField:
+    /// - Returns:
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
