@@ -17,7 +17,8 @@ class LoginChallengeUITests: XCTestCase {
     }
 
     ///
-    /// 正常ログインケース
+    /// 正常ログインケースおよびログイン後確認
+    /// （実質シナリオテストの類）
     ///
     /// - Throws:
     func testLogin() throws {
@@ -110,6 +111,66 @@ class LoginChallengeUITests: XCTestCase {
         }
 
     }
+
+    ///
+    /// ログインエラー（ID,パスワードの誤り）
+    ///
+    /// - Throws:
+    func testLoginErrorWithWrongCredentials() throws {
+
+        let loginButton = app.buttons["btnLogin"]
+
+        XCTContext.runActivity(named: "ログインボタンがタップできないこと") { _ in
+            waitToAppear(for: loginButton)
+            XCTAssertTrue(!loginButton.isEnabled)
+        }
+
+        XCTContext.runActivity(named: "IDを入力できること") { _ in
+            let text = "rehok"
+            let tbId = app.textFields["tbId"]
+            tbId.tap()
+            tbId.typeText(text)
+            app.keyboards.buttons["Return"].tap()
+            XCTAssertEqual(tbId.firstMatch.value as! String, text)
+        }
+
+        XCTContext.runActivity(named: "パスワードをマスクされた状態で入力できること") { _ in
+            let text = "4321"
+            let tbPassword = app.secureTextFields["tbPw"]
+            tbPassword.tap()
+            tbPassword.typeText(text)
+            app.keyboards.buttons["Return"].tap()
+            XCTAssertEqual(tbPassword.firstMatch.value as! String, "••••")
+        }
+
+        XCTContext.runActivity(named: "ログインボタンがタップできること") { _ in
+            waitToAppear(for: loginButton)
+            XCTAssertTrue(loginButton.isEnabled)
+        }
+
+        let alert = app.alerts.firstMatch
+        XCTContext.runActivity(named: "ログインが失敗すること") { _ in
+            loginButton.tap()
+            wait(for: [expectation(
+                    for: NSPredicate(format: "exists == true"),
+                    evaluatedWith: alert,
+                    handler: .none
+            )], timeout: waitInterval)
+            XCTAssertEqual(alert.label, "ログインエラー")
+        }
+
+        let closeOnAlert = alert.scrollViews.otherElements.buttons["閉じる"]
+        XCTContext.runActivity(named: "エラーダイアログを閉じることが可能であること") { _ in
+            wait(for: [expectation(
+                    for: NSPredicate(format: "exists == true"),
+                    evaluatedWith: closeOnAlert,
+                    handler: .none
+            )], timeout: waitInterval)
+            closeOnAlert.tap()
+        }
+
+    }
+
 
     ///
     /// 記録用のコードなので不要になったら破棄する
