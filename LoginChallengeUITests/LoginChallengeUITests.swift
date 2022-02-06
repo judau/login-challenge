@@ -81,14 +81,23 @@ class LoginChallengeUITests: XCTestCase {
             XCTAssertEqual(query.label, text)
         }
 
+//        ランダムなテストがやはり微妙なのでいったんコメントアウト。
+//        戻すときは APIServices/Sources/APIServices/UserService.swift も修正する
+//
+//        XCTContext.runActivity(named: "紹介文が表示されていること") { _ in
+//            let keyword = "ソフトウェア"
+//            let query = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", keyword)).firstMatch
+//            waitToAppear(for: query)
+//            let text1 = "ソフトウェアエンジニア。 Heart of Swift https://heart-of-swift.github.io を書きました。"
+//            let text2 = "ソフトウェアエンジニア。 Swift Zoomin' https://swift-tweets.connpass.com/ を主催しています。"
+//            XCTAssert(query.label == text1 || query.label == text2)
+//        }
+
         XCTContext.runActivity(named: "紹介文が表示されていること") { _ in
-            let keyword = "ソフトウェア"
-            let query = app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", keyword)).firstMatch
+            let text = "ソフトウェアエンジニア。 Heart of Swift https://heart-of-swift.github.io を書きました。"
+            let query = app.staticTexts[text]
             waitToAppear(for: query)
-            let text1 = "ソフトウェアエンジニア。 Heart of Swift https://heart-of-swift.github.io を書きました。"
-            let text2 = "ソフトウェアエンジニア。 Swift Zoomin' https://swift-tweets.connpass.com/ を主催しています。"
-            XCTAssert(query.label == text1 || query.label == text2)
-            // TODO もっといい方法ある？
+            XCTAssertEqual(query.label, text)
         }
 
         XCTContext.runActivity(named: "ログアウトが成功すること") { _ in

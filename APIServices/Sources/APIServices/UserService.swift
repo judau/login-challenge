@@ -23,15 +23,15 @@ public enum UserService {
 //        }
 
         let introduction: String
-        if Bool.random() {
+//        if Bool.random() {
             introduction = """
             ソフトウェアエンジニア。 Heart of Swift https://heart-of-swift.github.io を書きました。
             """
-        } else {
-            introduction = """
-            ソフトウェアエンジニア。 Swift Zoomin' https://swift-tweets.connpass.com/ を主催しています。
-            """
-        }
+//        } else {
+//            introduction = """
+//            ソフトウェアエンジニア。 Swift Zoomin' https://swift-tweets.connpass.com/ を主催しています。
+//            """
+//        }
         return User(id: "koher", name: "Yuta Koshizawa", introduction: introduction)
     }
 }
